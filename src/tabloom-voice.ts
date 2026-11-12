@@ -15,6 +15,8 @@ export const VOICE_ASSETS: Record<string, string> = {
   "table-view.css": "text/css; charset=utf-8",
   "payer.js": "text/javascript; charset=utf-8",
   "payer.css": "text/css; charset=utf-8",
+  "crew.js": "text/javascript; charset=utf-8",
+  "crew.css": "text/css; charset=utf-8",
   "sample/table-talk.wav": "audio/wav"
 };
 
