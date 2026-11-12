@@ -5,6 +5,7 @@ import { createGuestResponseView } from "./guest-response-view.js";
 import { initGuestNetwork } from "./guest-network.js";
 import { renderGuestReview } from "./guest-review.js";
 import { renderGuestReceipt } from "./guest-receipt.js";
+import { initChatIntake, renderChatCopy } from "./chat-intake-view.js"; // chat intake
 const $ = id => document.getElementById(id);
 const LAST_TABLE_KEY = "tabloom:last-table:v1";
 async function initialTableId(){
@@ -418,6 +419,7 @@ function renderPayments(){
   const openOptions=new Set([...$("payments").querySelectorAll("details[data-payment-options][open]")].map(details=>details.dataset.paymentOptions));
   $("payments").innerHTML=saved.bill.items.length?saved.calculated.dues.map(paymentCard).join(""):'<p class="empty-checkout">Add receipt items and save them to prepare each guest’s breakdown. No payment has been requested.</p>';
   for(const details of $("payments").querySelectorAll("details[data-payment-options]"))details.open=openOptions.has(details.dataset.paymentOptions);
+  renderChatCopy(saved); // chat intake
   $("sandbox-tag").textContent=sandboxConnection?.status==="ready"?"SANDBOX CONNECTED":saved.paypalReady?"SANDBOX CONFIGURED":"PAYMENTS NOT CONNECTED";
 }
 function renderEverything(){
@@ -703,6 +705,13 @@ $("receipt-import-status").addEventListener("click",handleReceiptUndo);
 $("guest-removal-status").addEventListener("click",handleReceiptUndo);
 
 
+// chat intake
+initChatIntake({
+  getDraft:()=>draft,
+  addGuests:names=>{try{lockEditCheck();for(const name of names){if(draft.guests.length>=12)break;draft.guests.push({id:uniqueId("guest"),name});}renderGuests();renderItems(true);setDirty();}catch(e){stateMsg(e.message,true);}},
+  setNote:text=>{$("bill-note").value=text;$("bill-note").dispatchEvent(new Event("input",{bubbles:true}));},
+  startSuggest:()=>{if($("suggest").disabled){stateMsg("Import or enter the receipt items first, then suggest splits.",true);return;}document.querySelector("details.assistant-card").open=true;$("suggest").click();}
+});
 function uniqueId(prefix){return prefix+"-"+crypto.randomUUID().replaceAll("-","").slice(0,12);}
 $("bill-note").addEventListener("input",setDirty);
 for(const id of ["bill-title","discount","tax","tip"])$(id).addEventListener("input",()=>setDirty({keepNoteReview:true}));

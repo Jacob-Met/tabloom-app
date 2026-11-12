@@ -20,6 +20,16 @@ const SAMPLE = {
   title: "Noor’s birthday dinner",
   guests: "Noor\nIdris\nCamille\nTomas",
   receipt: "Lamb tagine 26.00\nGrilled sea bass 29.00\nMezze platter 18.00\nSaffron rice 7.00\nMint tea pot 8.00\nBirthday cake 9.00\nTax 8.00\nTip 19.40\nTotal 124.40",
+  chat: [ // chat intake
+    "[11/12/26, 9:41 PM] Idris: I paid the bill, tell me what you had and I'll send requests",
+    "[11/12/26, 9:42 PM] Camille: I had the lamb tagine and shared the mezze with Tomas",
+    "[11/12/26, 9:42 PM] Tomas: lamb tagine for me too, and the mezze platter with Camille",
+    "[11/12/26, 9:43 PM] Idris: I had the grilled sea bass and the lamb tagine",
+    "[11/12/26, 9:43 PM] Noor: <Media omitted>",
+    "[11/12/26, 9:44 PM] Camille: it's Noor's birthday, she pays nothing for her own food. Idris, Tomas and I split the birthday cake",
+    "[11/12/26, 9:45 PM] Tomas: Everyone had the saffron rice and the mint tea pot",
+    "[11/12/26, 9:45 PM] Noor: thank you all!!"
+  ].join("\n"),
   note: "It was Noor’s birthday so she pays nothing for her own food. Idris, Camille and Tomas split the lamb tagine and the birthday cake. Only Idris had the grilled sea bass. Camille and Tomas shared the mezze platter. Everyone had the saffron rice and the mint tea pot."
 };
 
@@ -65,11 +75,17 @@ const WHO = [[/tagine|cake/i, ["Idris", "Camille", "Tomas"], "Idris, Camille and
   [/sea bass/i, ["Idris"], "Only Idris had the grilled sea bass."],
   [/mezze/i, ["Camille", "Tomas"], "Camille and Tomas shared the mezze platter."],
   [/rice|tea/i, ["Idris", "Camille", "Tomas"], "Everyone had the saffron rice and the mint tea pot; Noor pays nothing for her own food."]];
+const CHAT_WHO = [[/tagine/i, ["Idris", "Camille", "Tomas"], "Camille said: I had the lamb tagine; Tomas said: lamb tagine for me too; Idris said: I had the lamb tagine."], // chat intake
+  [/cake/i, ["Idris", "Camille", "Tomas"], "Camille said: Idris, Tomas and I split the birthday cake (it is Noor's birthday)."],
+  [/sea bass/i, ["Idris"], "Idris said: I had the grilled sea bass."],
+  [/mezze/i, ["Camille", "Tomas"], "Camille said: shared the mezze with Tomas; Tomas said: the mezze platter with Camille."],
+  [/rice|tea/i, ["Idris", "Camille", "Tomas"], "Tomas said: Everyone had the saffron rice and the mint tea pot; Camille said Noor pays nothing for her own food."]];
 const model = async body => {
   await wait(1200);
-  const { guests, items } = JSON.parse(body.messages.at(-1).content);
+  const { guests, items, tableNote } = JSON.parse(body.messages.at(-1).content);
+  const rules = /\bsaid: /.test(tableNote || "") ? CHAT_WHO : WHO; // chat intake
   const assignments = items.map(item => {
-    const rule = WHO.find(([re]) => re.test(item.name));
+    const rule = rules.find(([re]) => re.test(item.name));
     return { itemId: item.id, guestIds: rule ? rule[1].map(n => guests.find(g => g.name === n)?.id).filter(Boolean) : [], reason: rule ? rule[2] : "The note does not say who had this item." };
   });
   return json({ model: "simulated", created_at: new Date().toISOString(), message: { role: "assistant", content: JSON.stringify({ assignments }) }, done: true, done_reason: "stop" });
@@ -92,7 +108,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const badgeJs = `(function(){
   var SB=${JSON.stringify(SB)},S=${JSON.stringify(SAMPLE)};
   var b=document.createElement("div");b.className="sim-badge";b.setAttribute("role","note");b.textContent="Simulated demo: no real PayPal call";document.body.prepend(b);
-  var sample={"new-table-title":S.title,"new-table-guests":S.guests,"receipt-text":S.receipt,"bill-note":S.note};
+  var sample={"new-table-title":S.title,"new-table-guests":S.guests,"receipt-text":S.receipt,"bill-note":S.note,"chat-text":S.chat};
   var typed={};
   document.addEventListener("input",function(ev){if(ev.isTrusted&&ev.target.id)typed[ev.target.id]=true;},true);
   function fix(){

@@ -19,6 +19,14 @@ Open <http://127.0.0.1:3000/tabloom/> (set `TABLOOM_PORT` to use another port). 
 
 What is simulated: the PayPal Sandbox calls (token, create order, get order, capture) are answered in-process by a small fake, and the AI answer is a fixed split for the example note. The real PayPal Sandbox and local-model setup is described below.
 
+### From the group chat
+
+Instead of typing a note, the payer can paste what everyone wrote in the group chat (the demo opens with a sample WhatsApp chat already filled in).
+
+1. With the receipt imported, open **Paste the group chat** and press **Read the chat**. Plain `Name: message` lines, WhatsApp exports and iMessage/Android copies all work; timestamps, reactions, "image omitted" and system lines are ignored.
+2. Tabloom matches each sender to a guest by first name (anyone it cannot match is highlighted so you can pick the guest or leave them out), then press **Suggest splits from the chat**. The chat becomes a note with each line attributed ("Camille said: I had the sea bass"), so every proposed item still shows the sentence it came from. You confirm each line exactly as before.
+3. After the payment requests exist, **Copy for the group chat** (under Guest shares) copies one tidy message with each guest's amount, their own PayPal link and a total check; each guest also has their own **Copy** button.
+
 Tabloom is a local app for the person holding the receipt. Paste the receipt, describe the evening in a sentence or two, check the proposed split, and send each guest a payment request for their exact share.
 
 ## Who it is for

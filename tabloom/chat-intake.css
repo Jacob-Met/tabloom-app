@@ -1,0 +1,42 @@
+/* Group-chat intake and "copy for the group chat". */
+.chat-card{margin-top:24px;padding:18px 18px 20px;background:#fff7f2;border:1px solid #f3c9b8;border-left:4px solid var(--coral);border-radius:4px}
+.chat-card>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:16px;font-weight:800;color:var(--ink)}
+.chat-card>summary::marker{color:var(--coral)}
+.chat-hint{font-size:14px;line-height:1.5;color:var(--muted);margin:4px 0 12px}
+.chat-card .note-field{margin:6px 0 12px;font-size:11px}
+.chat-card textarea{font-weight:400;width:100%;min-height:150px;resize:vertical;font-size:16px;line-height:1.45;padding:12px;border:1px solid #98a4a7;border-radius:2px;background:var(--white);color:var(--ink)}
+.chat-card button{min-height:48px}
+.chat-card>.outline,.chat-result>.primary,.chat-result>.outline{width:100%;justify-content:center;gap:12px;letter-spacing:.4px}
+.chat-result h3{font-size:18px;margin:14px 0 8px}
+.chat-senders,.chat-copy-list{list-style:none;margin:0 0 12px;padding:0}
+.chat-sender{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);align-items:center;gap:8px 14px;padding:10px 0;border-top:1px solid #f0d6c9}
+.chat-sender-name{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
+.chat-sender-name small{color:var(--muted);font-size:12px}
+.chat-sender select{width:100%;min-height:44px;font-size:16px;padding:8px;background:var(--white);border:1px solid #98a4a7;color:var(--ink);border-radius:2px}
+.chat-sender.unmatched select{border-color:var(--coral);background:#fff0ea}
+.chat-preview{margin:8px 0 16px;font-size:14px}.chat-preview>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700;color:var(--blue)}
+.chat-preview pre,.chat-copy-preview{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;margin:0;padding:12px;background:var(--white);border:1px solid var(--line);max-height:220px;overflow:auto}
+.chat-copy{margin:0 0 28px;padding:18px;background:#fff7f2;border:1px solid #f3c9b8;border-left:4px solid var(--coral);border-radius:4px}
+.chat-copy h3{margin:0 0 6px;font-size:20px}
+.chat-copy-preview{margin-bottom:14px;max-height:none}
+#copy-group-chat{width:100%;justify-content:center;gap:12px;min-height:52px;font-size:14px}
+.chat-copy-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f0d6c9;font-size:15px}
+.chat-copy-list li:first-child{margin-top:14px;border-top:1px solid #f0d6c9}
+.chat-copy-list button{min-height:44px;min-width:76px;font-size:12px;justify-content:center}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(max-width:650px){
+  .chat-card{padding:12px 14px 16px;margin-left:-4px;margin-right:-4px}
+  .chat-sender{grid-template-columns:1fr}
+  .chat-copy{padding:14px}
+  .chat-copy-list li{font-size:14px}
+  #chat-suggest,#copy-group-chat{font-size:13px;padding:14px 10px}
+}
+/* Split review, comfortable at the table on a phone */
+@media(max-width:650px){
+  .suggestion small{display:block;font-size:14px;line-height:1.45;color:#3f4f5c;margin:2px 0 6px}
+  .suggestion .review-guests{gap:0 6px}
+  .suggestion .review-guests label{min-height:44px;display:inline-flex;align-items:center;gap:8px;padding-right:10px;font-size:16px}
+  .suggestion .review-guests input,.suggestion .review-confirm input{width:22px;height:22px}
+  .suggestion .review-confirm{min-height:48px;display:flex;align-items:center;gap:10px;font-size:15px}
+  #apply-ai{width:100%;justify-content:center;min-height:52px}
+}

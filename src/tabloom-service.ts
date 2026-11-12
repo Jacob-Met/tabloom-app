@@ -467,6 +467,7 @@ function reply(res:ServerResponse,status:number,data:unknown){
   res.end(JSON.stringify(data));
 }
 const mime:Record<string,string>={"share-math.js":"text/javascript; charset=utf-8","guest-identity.js":"text/javascript; charset=utf-8","draft-comparison.js":"text/javascript; charset=utf-8","receipt-intake.js":"text/javascript; charset=utf-8","receipt-reconciliation.js":"text/javascript; charset=utf-8","receipt-intake-view.js":"text/javascript; charset=utf-8","receipt-intake.css":"text/css; charset=utf-8","index.html":"text/html; charset=utf-8","style.css":"text/css; charset=utf-8","main.js":"text/javascript; charset=utf-8","guest-receipt.js":"text/javascript; charset=utf-8","guest-review.js":"text/javascript; charset=utf-8","guest-network.js":"text/javascript; charset=utf-8","guest-response-view.js":"text/javascript; charset=utf-8","guest-response-view.css":"text/css; charset=utf-8"};
+Object.assign(mime,{"chat-intake.js":"text/javascript; charset=utf-8","chat-intake-view.js":"text/javascript; charset=utf-8","chat-intake.css":"text/css; charset=utf-8"}); // chat intake
 mime["receipt-draft-store.js"]="text/javascript; charset=utf-8";
 mime["receipt-ocr.js"]="text/javascript; charset=utf-8";
 mime["receipt-photo-crop.js"]="text/javascript; charset=utf-8";
