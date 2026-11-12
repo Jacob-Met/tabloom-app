@@ -22,3 +22,8 @@
 #edit-list{margin:8px 0}
 #edit-list>summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:700;padding:10px 6px}
 @media(max-width:560px){#table-view{padding:12px;border-radius:22px}.scene-pill{font-size:11px;padding:4px 8px}.scene-item{font-size:13px;padding:10px 13px}#table-view-apply{width:100%}}
+
+/* the person being assigned */
+#table-view [data-brush="1"] .scene-fill{outline:3px solid #fff;outline-offset:2px;opacity:.7}
+#table-view [data-brush="1"] .scene-pill{box-shadow:0 0 0 3px #fff,0 6px 18px rgba(0,0,0,.35);transform:scale(1.08)}
+#table-view .scene-filming{cursor:pointer}

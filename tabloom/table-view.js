@@ -3,9 +3,10 @@ const $ = id => document.getElementById(id);
 const sug = $("suggestions");
 if (sug) init();
 function init() {
-  let view = null, frameUrl = "", frameFor = "", pos = [], holders = [], dims = [16, 9];
+  let view = null, frameUrl = "", frameFor = "", pos = [], holders = [], dims = [16, 9], brush = "";
   const names = () => [...document.querySelectorAll("#guests .guest-name")].map(i => i.value.trim()).filter(Boolean);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const HINT = "Tap a face, then tap what is theirs. Or tap an item to cycle who pays. Drag a box if it is off.";
   const col = i => "var(--scene-c" + (i % 8) + ")";
   const sets = () => [...sug.querySelectorAll("fieldset.suggestion")];
   const cents = f => { const m = /([\d.,]+)\s*$/.exec(f.querySelector("legend").textContent); return m ? Math.round(parseFloat(m[1].replace(/,/g, "")) * 100) : 0; };
@@ -57,7 +58,7 @@ function init() {
     if (!holders.length) initHolders(gs);
     if (!view) {
       view = document.createElement("section"); view.id = "table-view"; view.setAttribute("aria-label", "Who had what");
-      view.innerHTML = '<h3>Who had what</h3><p class="scene-hint">Tap an item to change who pays. Tap a face to switch who it is, or drag the box if it is off.</p><div class="scene-pic"></div><div class="scene-items"></div><div class="scene-apply-row"><button id="table-view-apply" type="button">Looks right</button></div>';
+      view.innerHTML = '<h3>Who had what</h3><p class="scene-hint">' + HINT + '</p><div class="scene-pic"></div><div class="scene-items"></div><div class="scene-apply-row"><button id="table-view-apply" type="button">Looks right</button></div>';
       let det = $("edit-list");
       if (!det) { det = document.createElement("details"); det.id = "edit-list"; det.innerHTML = "<summary>Edit as a list</summary>"; sug.before(det); det.append(sug); }
       det.before(view);
@@ -73,11 +74,12 @@ function init() {
     const gs = names(), pic = view.querySelector(".scene-pic"), pcts = v => (v * 100).toFixed(2) + "%";
     let html = '<img alt="The table" src="' + frameUrl + '">';
     pos.forEach((p, i) => { const g = gs.indexOf(holders[i]); if (g < 0) return; html += '<div class="scene-band" data-css="background:' + col(g) + ';left:' + pcts(p.x - p.w * 0.3) + ';width:' + pcts(p.w * 1.6) + ';top:' + pcts(p.y + p.h * 1.05) + ';height:' + pcts(Math.min(0.42, 0.98 - p.y - p.h * 1.05)) + '"></div>'; });
-    pos.forEach((p, i) => { const g = gs.indexOf(holders[i]); const c = g < 0 ? "#cbd2dc" : col(g); html += '<div class="scene-person" data-scene-person="' + esc((holders[i] || "nobody").toLowerCase()) + '" data-slot="' + i + '" data-css="left:' + pcts(p.x) + ';top:' + pcts(p.y) + ';width:' + pcts(p.w) + ';height:' + pcts(p.h) + '"><span class="scene-fill" data-css="background:' + c + '"></span><span class="scene-pill" data-css="background:' + c + '"><span class="scene-name">' + esc(holders[i] || "Nobody") + '</span> · <span class="scene-total"></span></span></div>'; });
+    pos.forEach((p, i) => { const g = gs.indexOf(holders[i]); const c = g < 0 ? "#cbd2dc" : col(g); html += '<div class="scene-person" data-scene-person="' + esc((holders[i] || "nobody").toLowerCase()) + '"' + (brush && brush === holders[i] ? ' data-brush="1"' : "") + ' data-slot="' + i + '" data-css="left:' + pcts(p.x) + ';top:' + pcts(p.y) + ';width:' + pcts(p.w) + ';height:' + pcts(p.h) + '"><span class="scene-fill" data-css="background:' + c + '"></span><span class="scene-pill" data-css="background:' + c + '"><span class="scene-name">' + esc(holders[i] || "Nobody") + '</span> · <span class="scene-total"></span></span></div>'; });
     const fm = gs.filter(n => !holders.includes(n));
-    if (fm.length) { const n = fm[0], g = gs.indexOf(n); html += '<div class="scene-filming" data-scene-person="' + esc(n.toLowerCase()) + '"><span class="scene-pill" data-css="background:' + col(g) + '"><span class="scene-name">' + esc(n) + '</span> · filming · <span class="scene-total"></span></span></div>'; }
+    if (fm.length) { const n = fm[0], g = gs.indexOf(n); html += '<div class="scene-filming" data-scene-person="' + esc(n.toLowerCase()) + '"' + (brush === n ? ' data-brush="1"' : "") + '><span class="scene-pill" data-css="background:' + col(g) + '"><span class="scene-name">' + esc(n) + '</span> · filming · <span class="scene-total"></span></span></div>'; }
     pic.innerHTML = html; css(pic);
     pic.querySelectorAll(".scene-person").forEach(el => wire(el, pic));
+    const film = pic.querySelector(".scene-filming"); if (film) film.addEventListener("click", () => setBrush(film.querySelector(".scene-name").textContent));
     totals();
   }
 
@@ -88,10 +90,11 @@ function init() {
       const move = ev => { const dx = ev.clientX - start.x, dy = ev.clientY - start.y; if (Math.abs(dx) + Math.abs(dy) > 5) moved = true; if (!moved) return;
         pos[i].x = Math.min(1 - pos[i].w, Math.max(0, start.px + dx / r.width)); pos[i].y = Math.min(1 - pos[i].h, Math.max(0, start.py + dy / r.height));
         el.style.left = pos[i].x * 100 + "%"; el.style.top = pos[i].y * 100 + "%"; };
-      const up = () => { el.removeEventListener("pointermove", move); el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up); if (moved) paintPic(); else cycleHolder(i); };
+      const up = () => { el.removeEventListener("pointermove", move); el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up); if (moved) paintPic(); else setBrush(holders[i]); };
       el.addEventListener("pointermove", move); el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
     });
   }
+  function setBrush(name) { brush = brush === name ? "" : (name || ""); paintPic(); const h = view.querySelector(".scene-hint"); if (h) h.textContent = brush ? "Now tap what " + brush + " is paying for. Tap " + brush + " again when done." : HINT; }
   function cycleHolder(i) {
     const gs = names(); const cur = gs.indexOf(holders[i]); const next = gs[(cur + 1) % gs.length];
     const other = holders.indexOf(next); if (other >= 0) holders[other] = holders[i]; holders[i] = next; paintPic(); paintItems();
@@ -124,7 +127,9 @@ function init() {
     const b = e.target.closest("[data-scene-item]"); if (!b) return;
     const f = sets()[+b.dataset.sceneItem], n = names().length, cur = picked(f);
     let next;
-    if (e.shiftKey) { const add = [...Array(n).keys()].find(i => !cur.includes(i)); next = add === undefined ? cur.slice(0, -1) : [...cur, add].sort(); }
+    const bi = names().indexOf(brush);
+    if (brush && bi >= 0) { next = cur.includes(bi) ? cur.filter(i => i !== bi) : [...cur, bi].sort(); }
+    else if (e.shiftKey) { const add = [...Array(n).keys()].find(i => !cur.includes(i)); next = add === undefined ? cur.slice(0, -1) : [...cur, add].sort(); }
     else {
       const states = [...Array(n).keys()].map(i => [i]); if (n > 1) states.push([...Array(n).keys()]); states.push([]);
       const at = states.findIndex(s => s.length === cur.length && s.every((v, j) => v === cur[j]));
