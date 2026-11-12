@@ -3,3 +3,8 @@ dist/
 tabloom/receipt-ocr/
 .env
 *.log
+tools/voice/models/
+__pycache__/
+*.pyc
+.venv-voice/
+tools/voice/.venv/

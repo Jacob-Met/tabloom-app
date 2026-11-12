@@ -12,6 +12,7 @@ import { LEGACY_TABLE, createStoredTable, storedTableIds, tableFile } from "./ta
 import { guestReviewPacket, previewGuestReview } from "./tabloom-guest-review.js";
 import { previewGuestReviews } from "./tabloom-guest-batch.js";
 import { guestCheckoutPacket } from "./tabloom-guest-checkout.js";
+import { handleVoice, VOICE_ASSETS } from "./tabloom-voice.js"; // voice intake
 import { checkPayPalSandboxConnection } from "./tabloom-paypal-setup.js";
 
 import type { TabloomGuestLinks } from "./tabloom-guest-links.js";
@@ -467,6 +468,7 @@ function reply(res:ServerResponse,status:number,data:unknown){
   res.end(JSON.stringify(data));
 }
 const mime:Record<string,string>={"share-math.js":"text/javascript; charset=utf-8","guest-identity.js":"text/javascript; charset=utf-8","draft-comparison.js":"text/javascript; charset=utf-8","receipt-intake.js":"text/javascript; charset=utf-8","receipt-reconciliation.js":"text/javascript; charset=utf-8","receipt-intake-view.js":"text/javascript; charset=utf-8","receipt-intake.css":"text/css; charset=utf-8","index.html":"text/html; charset=utf-8","style.css":"text/css; charset=utf-8","main.js":"text/javascript; charset=utf-8","guest-receipt.js":"text/javascript; charset=utf-8","guest-review.js":"text/javascript; charset=utf-8","guest-network.js":"text/javascript; charset=utf-8","guest-response-view.js":"text/javascript; charset=utf-8","guest-response-view.css":"text/css; charset=utf-8"};
+Object.assign(mime,VOICE_ASSETS); // voice intake
 mime["receipt-draft-store.js"]="text/javascript; charset=utf-8";
 mime["receipt-ocr.js"]="text/javascript; charset=utf-8";
 mime["receipt-photo-crop.js"]="text/javascript; charset=utf-8";
@@ -491,6 +493,7 @@ export async function handleTabloom(req:IncomingMessage,res:ServerResponse,servi
     if(req.method==="GET"&&pathname==="/tabloom/api/tables"){reply(res,200,await collection.tableList());return true;}
     if(req.method==="GET"&&pathname==="/tabloom/api/guest-network"){if(!collection.guestNetwork)fail("Guest network setup is unavailable in this installation.",503);reply(res,200,collection.guestNetwork.status());return true;}
     if(req.method==="GET"&&pathname==="/tabloom/api/receipt-reader"){reply(res,200,await receiptVisionReader.status());return true;}
+    if(await handleVoice(req,res,pathname,requestUrl.searchParams))return true; // voice intake
     const tableId=requestUrl.searchParams.get("table") ?? LEGACY_TABLE;
     if(pathname!=="/tabloom/api/tables")service=await collection.table(tableId);
     if(req.method==="GET"&&pathname==="/tabloom/api/guest-links"){const state=await service.state();reply(res,200,{links:service.links?.list(service.tableId,state.bill.revision)??[],groups:service.links?.groupList(service.tableId,state.bill.revision)??[]});return true;}

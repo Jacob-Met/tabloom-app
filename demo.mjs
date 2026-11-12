@@ -23,10 +23,14 @@ const SAMPLE = {
   note: "It was Noor’s birthday so she pays nothing for her own food. Idris, Camille and Tomas split the lamb tagine and the birthday cake. Only Idris had the grilled sea bass. Camille and Tomas shared the mezze platter. Everyone had the saffron rice and the mint tea pot."
 };
 
+// voice intake: what the real listener returned for the bundled sample recording (tabloom/sample/table-talk.wav).
+const VOICE_RESULT = {"speakers":4,"duration":24.57,"segments":[{"speaker":"S1","start":0.0,"end":5.42,"text":"I'm Idris. I had the grilled sea base and I shared the lamb tagine with Camille and Tomas."},{"speaker":"S2","start":6.8,"end":11.68,"text":"Camille here. I split the mez platter with Tomas and I had a third of the tagine."},{"speaker":"S3","start":12.36,"end":18.26,"text":"And I had the mez with Camille. The rice and the mint tea were shared between the three of us."},{"speaker":"S4","start":19.22,"end":23.32,"text":"I'm Noor and it's my birthday, so I only had a slice of the birthday cake."}]};
+
 // Replace the whole environment the app reads: fake credentials, fake model URL, throwaway data.
 for (const key of Object.keys(process.env)) if (/^(TABLOOM_|HOUSEHOLD_LEDGER_)/.test(key)) Reflect.deleteProperty(process.env, key);
 Object.assign(process.env, {
   TABLOOM_PORT: String(port), TABLOOM_PAYPAL_CLIENT_ID: "SIMULATED", TABLOOM_PAYPAL_CLIENT_SECRET: "SIMULATED",
+  TABLOOM_VOICE_CANNED: JSON.stringify(VOICE_RESULT), // voice intake: canned listener answer for tabloom/sample/table-talk.wav
   TABLOOM_AI_URL: "http://127.0.0.1:1/api/chat", TABLOOM_AI_MODEL: "simulated-canned-answer",
   TABLOOM_DATA_PATH: join(mkdtempSync(join(tmpdir(), "tabloom-demo-")), "tabloom.json")
 });
