@@ -29,6 +29,14 @@ Instead of typing a note, the payer can paste what everyone wrote in the group c
 
 Tabloom is a local app for the person holding the receipt. Paste the receipt, describe the evening in a sentence or two, check the proposed split, and send each guest a payment request for their exact share.
 
+## Record the table (voice intake)
+
+Instead of typing a note, the payer can hold up the phone and ask everyone what they had. **Record the table** (or **Upload a recording**) sends the audio to a small local listener that transcribes it and separates the voices; the payer taps **Hear** on each speaker, picks the guest ("Who is this?", prefilled when someone says "I'm Camille"), and Tabloom builds a note such as "Camille said: I had..." for the same AI split and the same item-by-item confirmation. Audio never leaves your computer.
+
+- Install once, then start: `npm run listen:install` (Python 3.10+ and ffmpeg; downloads about 600 MB of open models with no account) and `npm run listen` (port 5611, `TABLOOM_VOICE_PORT` to change).
+- Without the listener the section says so and the typed note works as before. `npm run demo` includes a bundled sample recording with a canned result.
+- Limits: overlapping speech is not separated, similar voices (or two same-sounding friends) can merge into one speaker, short replies and noisy rooms give weak voice prints, and speech recognition mangles unusual names. Always check the speaker list and the proposed split.
+
 ## Who it is for
 
 Friends, housemates and colleagues who share meals and do not want to split evenly when the evening was not even: someone skipped the wine, two people shared the starters, it was somebody's birthday.

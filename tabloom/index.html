@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="./receipt-intake.css">
 <link rel="stylesheet" href="./chat-intake.css"> <!-- chat intake -->
+<link rel="stylesheet" href="./voice-intake.css"> <!-- // voice intake -->
 </head>
 <body>
 <header class="masthead">
@@ -72,6 +73,19 @@
         <div id="chat-result" class="chat-result" hidden></div>
       </details>
       <!-- /chat intake -->
+      <!-- // voice intake -->
+      <details class="assistant-card voice-card" id="voice-intake"><summary>Record the table</summary>
+        <p class="voice-help">Hold the phone up and ask “what did you get?”. Everyone answers out loud; Tabloom tells the voices apart, and you say who is who. It all stays on this computer.</p>
+        <div id="voice-unavailable" class="voice-note" role="status" hidden></div>
+        <div class="voice-actions">
+          <button type="button" id="voice-record" class="outline">● RECORD THE TABLE</button>
+          <label class="voice-upload">UPLOAD A RECORDING<input id="voice-file" type="file" accept="audio/*,video/webm,.m4a,.wav,.mp3,.webm,.ogg" aria-label="Upload a recording"></label>
+        </div>
+        <p id="voice-sample-row" hidden>No recording handy? <button type="button" id="voice-sample">Try the sample dinner</button></p>
+        <p id="voice-status" role="status" aria-live="polite"></p>
+        <div id="voice-speakers"></div>
+        <button type="button" id="voice-suggest" class="outline" hidden>SUGGEST SPLITS FROM THE RECORDING <span>↗</span></button>
+      </details>
       <details class="assistant-card"><summary>Split from a note</summary>
         <label class="note-field">TABLE NOTE<textarea id="bill-note" rows="3" maxlength="2000" placeholder="Use receipt names: Only Mira ate the udon. Everyone except Mira shared the dumplings."></textarea></label>
         <button type="button" id="suggest" class="outline">SUGGEST SPLITS <span>↗</span></button>
@@ -114,4 +128,5 @@
 
 </main>
 <script src="./main.js" type="module"></script>
+<script src="./voice-intake.js" type="module"></script> <!-- // voice intake -->
 </body></html>

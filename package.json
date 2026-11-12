@@ -13,6 +13,8 @@
     "build": "tsc --noEmitOnError && node tools/copy-tabloom-assets.mjs",
     "start": "node dist/src/index.js",
     "demo": "node demo.mjs",
+    "listen:install": "sh tools/voice/install.sh",
+    "listen": "sh tools/voice/start.sh",
     "test": "npm run build && node --test dist/test/*.test.js test/*.test.mjs",
     "typecheck": "tsc --noEmit"
   },
