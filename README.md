@@ -39,6 +39,15 @@ Instead of typing a note, the payer can hold up the phone and ask everyone what 
 - Without the listener the section says so and the typed note works as before. `npm run demo` includes a bundled sample recording with a canned result.
 - Limits: overlapping speech is not separated, similar voices (or two same-sounding friends) can merge into one speaker, short replies and noisy rooms give weak voice prints, and speech recognition mangles unusual names. Always check the speaker list and the proposed split.
 
+## How Tabloom decides who had what
+
+Every clue becomes a claim: a person, an item and how much to trust the source. The payer's own answers count fully; the group chat and spoken lines count a lot, a typed note a bit less, where plates sit in a video frame less again, then what someone ordered here before.
+When several clues point at the same person they add up, so two agreeing sources are surer than one.
+When they point at different people the stronger one wins if it is clearly ahead, and Tabloom asks you only if they are close.
+"Not mine" removes a person, "shared" splits the item, and a birthday covered by friends moves the cost to them.
+Items with two or more on the receipt need that many different people, or Tabloom asks who had them.
+Unmentioned drinks come as one question. Questions are ordered by price times doubt. The code is `tabloom/evidence.js`.
+
 ## Who it is for
 
 Friends, housemates and colleagues who share meals and do not want to split evenly when the evening was not even: someone skipped the wine, two people shared the starters, it was somebody's birthday.
