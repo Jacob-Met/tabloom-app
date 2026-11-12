@@ -159,3 +159,19 @@
 .receipt-direct-edit>summary{display:none}
 .receipt-direct-edit{margin:0}
 .receipt-currency-guidance{color:var(--ink);line-height:1.45;margin:0 0 12px}
+
+/* The phone review gives editable amounts the space; photo tools remain one tap away. */
+#receipt-photo-tools-toggle{display:none}
+#receipt-photo-tool-buttons{display:contents}
+@media(max-width:650px){
+ .has-receipt-photo:has(#receipt-review:not([hidden])) #receipt-photo-source{margin-bottom:4px}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) .receipt-photo-frame{height:100px;max-height:20dvh}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) #receipt-photo-source figcaption{display:flex;align-items:center;justify-content:space-between;gap:4px 12px}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) #receipt-photo-tools-toggle{display:inline-flex;align-items:center;min-height:44px;font-weight:700;color:var(--blue);font-size:13px}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) #receipt-photo-tool-buttons{display:none;flex-basis:100%;flex-wrap:wrap;gap:4px 10px}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) #receipt-photo-tool-buttons.expanded{display:flex}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) #receipt-photo-tool-buttons button{flex:1 1 42%;text-align:left}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) .receipt-review{margin-top:4px}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) .receipt-model-confirmation{font-size:13px;line-height:1.35;padding:8px;margin:6px 0 8px}
+ .has-receipt-photo:has(#receipt-review:not([hidden])) .receipt-review-item{padding:3px 0}
+}
