@@ -51,3 +51,6 @@ html.home-mode .table-bar{border:0;padding:0 0 110px;justify-content:center;disp
 html.home-mode #table-toggle{display:none}
 html.home-mode #new-table{min-height:44px;font-size:13px;letter-spacing:0;font-weight:600;opacity:.6}
 html.home-mode #home{padding-bottom:0}
+.am-seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:999px;background:#f0f3fa}
+.am-seg button{min-height:44px;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+.am-seg button[aria-pressed="true"]{background:var(--ink,#1c1a17);color:var(--paper,#fff)}

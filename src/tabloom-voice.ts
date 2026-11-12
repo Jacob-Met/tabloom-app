@@ -9,6 +9,8 @@ export const VOICE_ASSETS: Record<string, string> = {
   "voice-intake.css": "text/css; charset=utf-8",
   "home.js": "text/javascript; charset=utf-8",
   "home.css": "text/css; charset=utf-8",
+  "shopping.js": "text/javascript; charset=utf-8",
+  "shopping.css": "text/css; charset=utf-8",
   "sample/table-talk.wav": "audio/wav"
 };
 

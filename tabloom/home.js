@@ -28,17 +28,18 @@ function build() {
   const home = document.createElement("section");
   home.id = "home"; home.setAttribute("aria-label", "Your dinners");
   home.innerHTML = '<h1 class="home-title">Your dinners</h1><p class="home-sub" id="home-sub"></p><ul id="home-list" class="home-list"></ul>' +
-    '<div class="home-cta"><button id="add-meal" type="button">' + ic.plus + '<span>Add a meal</span></button></div>';
+    '<div class="home-cta"><button id="add-meal" type="button">' + ic.plus + '<span>Add a receipt</span></button></div>';
   shell.prepend(home);
   const sheet = document.createElement("div");
-  sheet.id = "add-meal-sheet"; sheet.hidden = true; sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-modal", "true"); sheet.setAttribute("aria-label", "Add a meal");
+  sheet.id = "add-meal-sheet"; sheet.hidden = true; sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-modal", "true"); sheet.setAttribute("aria-label", "Add a receipt");
   sheet.innerHTML = '<div class="am-backdrop" data-am-close></div><form class="am-card" id="add-meal-form"><div class="am-grab" aria-hidden="true"></div>' +
-    '<div class="am-head"><h2>Add a meal</h2><button type="button" class="am-x" data-am-close aria-label="Close">' + ic.cross + '</button></div>' +
+    '<div class="am-head"><h2 id="add-meal-heading">Add a receipt</h2><button type="button" class="am-x" data-am-close aria-label="Close">' + ic.cross + '</button></div>' +
+    '<div id="add-kind" class="am-seg" role="group" aria-label="Kind"><button type="button" data-add-kind="dinner" aria-pressed="true">Dinner</button><button type="button" data-add-kind="shopping" aria-pressed="false">Shopping run</button></div>' +
     '<label class="am-field">Name<input id="add-meal-title" maxlength="100" autocomplete="off"></label>' +
-    '<label class="am-field">Who was there<textarea id="add-meal-guests" rows="3" placeholder="Alex, Sam, Priya"></textarea><small>One per line or separated by commas. 2 to 12 people.</small></label>' +
+    '<label class="am-field"><span id="add-meal-guests-label">Who was there</span><textarea id="add-meal-guests" rows="3" placeholder="Alex, Sam, Priya"></textarea><small id="add-meal-guests-hint">One per line or separated by commas. 2 to 12 people.</small></label>' +
     '<p id="add-meal-error" class="am-error" role="alert"></p>' +
-    '<div class="am-tiles"><button type="button" id="add-meal-receipt" class="am-tile">' + ic.camera + '<strong>Snap the receipt</strong><span>Take or choose a photo</span></button>' +
-    '<button type="button" id="add-meal-record" class="am-tile">' + ic.video + '<strong>Film the table</strong><span>Everyone says what they had</span></button></div>' +
+    '<div class="am-tiles"><button type="button" id="add-meal-receipt" class="am-tile">' + ic.camera + '<strong id="am-t1">Snap the receipt</strong><span id="am-s1">Take or choose a photo</span></button>' +
+    '<button type="button" id="add-meal-record" class="am-tile">' + ic.video + '<strong id="am-t2">Film the table</strong><span id="am-s2">Everyone says what they had</span></button></div>' +
     '<input id="add-meal-receipt-file" type="file" accept="image/*" capture="environment" hidden><input id="add-meal-record-file" type="file" accept="video/*,audio/*" capture hidden></form>';
   document.body.append(sheet);
 }
@@ -64,10 +65,22 @@ async function loadHome() {
 
 function prefillTitle() {
   const d = new Date(), wd = d.toLocaleDateString("en-GB", { weekday: "short" }), mo = d.toLocaleDateString("en-GB", { month: "short" });
-  return "Dinner · " + wd + " " + d.getDate() + " " + mo;
+  return (addKind === "shopping" ? "Shopping run · " : "Dinner · ") + wd + " " + d.getDate() + " " + mo;
 }
 const parseGuests = text => text.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
-function openSheet() { $("add-meal-title").value = prefillTitle(); $("add-meal-error").textContent = ""; $("add-meal-sheet").hidden = false; document.body.classList.add("am-open"); $("add-meal-guests").focus(); }
+let addKind = "dinner";
+const KIND_TEXT = {
+  dinner: ["Who was there", "One per line or separated by commas. 2 to 12 people.", "Film the table", "Everyone says what they had", "Alex, Sam, Priya"],
+  shopping: ["Who is it split with", "The first name is the person who paid. One per line or separated by commas. 2 to 12 people.", "Film the haul", "Say whose things are whose", "Grandma, Mom"]
+};
+function setKind(k) {
+  const prefilled = $("add-meal-title").value === prefillTitle(); addKind = k;
+  document.querySelectorAll("[data-add-kind]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.addKind === k)));
+  const t = KIND_TEXT[k];
+  $("add-meal-guests-label").textContent = t[0]; $("add-meal-guests-hint").textContent = t[1]; $("am-t2").textContent = t[2]; $("am-s2").textContent = t[3]; $("add-meal-guests").placeholder = t[4];
+  if (prefilled || !$("add-meal-title").value) $("add-meal-title").value = prefillTitle();
+}
+function openSheet() { setKind("dinner"); $("add-meal-title").value = prefillTitle(); $("add-meal-error").textContent = ""; $("add-meal-sheet").hidden = false; document.body.classList.add("am-open"); $("add-meal-guests").focus(); }
 function closeSheet() { $("add-meal-sheet").hidden = true; document.body.classList.remove("am-open"); }
 
 // Create through the existing form, then the editor navigates to ?table=<id>.
@@ -77,6 +90,7 @@ async function createTable(kind, file) {
   if (guests.length < 2 || guests.length > 12) { err.textContent = "Add 2 to 12 people."; return false; }
   err.textContent = "Setting up your table…";
   if (file && !(await stash(file))) file = null;
+  try { sessionStorage.setItem("tabloom:pending-kind", addKind); } catch {}
   sessionStorage.setItem(INTENT, JSON.stringify({ kind, file: !!file }));
   document.documentElement.classList.remove("home-mode");
   document.body.classList.add("home-creating");
@@ -88,6 +102,7 @@ async function createTable(kind, file) {
 }
 function wireSheet() {
   $("add-meal").addEventListener("click", openSheet);
+  $("add-kind").addEventListener("click", e => { const b = e.target.closest("[data-add-kind]"); if (b) setKind(b.dataset.addKind); });
   $("add-meal-sheet").addEventListener("click", e => { if (e.target.closest("[data-am-close]")) closeSheet(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("add-meal-sheet").hidden) closeSheet(); });
   $("add-meal-form").addEventListener("submit", e => e.preventDefault());
