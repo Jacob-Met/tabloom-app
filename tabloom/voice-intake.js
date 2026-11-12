@@ -37,7 +37,7 @@ function init() {
   function setRecordUi(on) { const b = $("voice-record"); b.classList.toggle("recording", on); b.innerHTML = on ? "■ STOP AND LISTEN" : "● RECORD THE TABLE"; }
 
   async function process(blob) {
-    stopPlaying(); $("voice-speakers").replaceChildren(); $("voice-lines").replaceChildren(); state.lines = []; state.who = []; if (state.videoUrl) URL.revokeObjectURL(state.videoUrl); state.videoUrl = ""; state.video = null; $("voice-suggest").hidden = true; state.buffer = null;
+    stopPlaying(); $("voice-speakers").replaceChildren(); $("voice-lines").replaceChildren(); state.lines = []; state.who = []; if (state.videoUrl) URL.revokeObjectURL(state.videoUrl); state.videoUrl = ""; state.video = null; window.tabloomVideo = null; $("voice-suggest").hidden = true; state.buffer = null;
     say("Listening to the recording… this takes about as long as the recording.", "live");
     root.classList.add("busy");
     try {
@@ -104,6 +104,8 @@ function init() {
   }
   function captureFrames(lines) {
     const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = state.videoUrl; state.video = v;
+    window.tabloomVideo = { url: state.videoUrl, order: () => { const names = guestNames(), seen = []; state.who.forEach(k => { const n = names.find(x => x.toLowerCase() === k); if (n && !seen.includes(n)) seen.push(n); }); return seen; } };
+    window.dispatchEvent(new Event("tabloom-video"));
     const seek = t => new Promise((res, rej) => { const ok = () => { v.removeEventListener("error", bad); res(); }, bad = () => { v.removeEventListener("seeked", ok); rej(); }; v.addEventListener("seeked", ok, { once: true }); v.addEventListener("error", bad, { once: true }); v.currentTime = t; });
     (async () => {
       await new Promise((res, rej) => { v.addEventListener("loadeddata", res, { once: true }); v.addEventListener("error", rej, { once: true }); });

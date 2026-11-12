@@ -7,6 +7,8 @@ const listenerUrl = () => process.env.TABLOOM_VOICE_URL ?? "http://127.0.0.1:561
 export const VOICE_ASSETS: Record<string, string> = {
   "voice-intake.js": "text/javascript; charset=utf-8",
   "voice-intake.css": "text/css; charset=utf-8",
+  "table-view.js": "text/javascript; charset=utf-8",
+  "table-view.css": "text/css; charset=utf-8",
   "sample/table-talk.wav": "audio/wav"
 };
 
