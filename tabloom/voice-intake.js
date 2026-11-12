@@ -160,10 +160,21 @@ function init() {
     });
     return m;
   }
-  function refresh() { const n = assignments().size; $("voice-suggest").disabled = !n; $("voice-suggest").innerHTML = "SUGGEST SPLITS FROM THE RECORDING <span>↗</span>"; }
+  function refresh() { const n = assignments().size; $("voice-suggest").disabled = !n; $("voice-suggest").innerHTML = (state.lines.length ? "READ WHAT THE TABLE SAID" : "SUGGEST SPLITS FROM THE RECORDING") + " <span>↗</span>"; }
 
   $("voice-suggest").addEventListener("click", () => {
     const m = assignments(); if (!m.size) return;
+    // Lines tagged one by one go through the same reading as a pasted group chat, so vague answers
+    // ("I had the chicken") and items nobody mentioned get their "Clear this up" cards before any split.
+    if (state.lines.length && $("chat-text") && $("chat-read")) {
+      const names = guestNames();
+      const said = state.lines.map((l, i) => { const n = names.find(x => x.toLowerCase() === state.who[i]); return n ? n + ": " + l.text : ""; }).filter(Boolean).join("\n");
+      const box = $("chat-text"); box.value = said; box.dispatchEvent(new Event("input", { bubbles: true }));
+      const card = box.closest("details"); if (card) card.open = true;
+      $("chat-read").click(); say("Read what the table said. Clear up anything below, then suggest the split.", "ok");
+      setTimeout(() => ($("chat-result") || box).scrollIntoView({ block: "start", behavior: "smooth" }), 250);
+      return;
+    }
     let note = [...m].map(([name, said]) => name + " said: " + said.join(" ")).join("\n");
     if (note.length > 2000) note = note.slice(0, 1990).replace(/\s+\S*$/, "") + " …";
     const field = $("bill-note"); field.value = note; field.dispatchEvent(new Event("input", { bubbles: true }));

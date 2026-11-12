@@ -113,6 +113,8 @@ export function buildGuestMessage({ title, row }) {
 const EMOJI_WORDS = { "🍗": "chicken", "🍝": "pasta", "🐟": "fish", "🍵": "tea", "🫖": "tea", "🍰": "cake", "🎂": "cake", "🍺": "beer", "🍕": "pizza", "🥗": "salad", "🍔": "burger", "🍷": "wine", "🥩": "steak" };
 const STOP = new Set(("the and for with from just also too only some pls please thanks thank all everyone everybody each both shared share sharing split splitting half third bit more another same that this these those which what who whom tell paid pay bill nothing nope yes yeah yep okay lol haha had have has got get ordered order orders took take having did does dont didnt ill its not but you your yours mine his her their was were are been will would can could should one two three any anyone dinner lunch food drink drinks birthday tonight").split(" "));
 const FILLER = new Set(["plate", "platter", "pot", "bowl", "side", "special", "large", "small", "glass", "dish", "order", "and", "the", "with", "alla", "al", "di", "del", "della", "con"]);
+// Kind words people say instead of the dish name, and the receipt words they stand for.
+const KINDS = { pasta: ["penne", "spaghetti", "linguine", "rigatoni", "fettuccine", "tagliatelle", "ravioli", "gnocchi", "lasagna", "macaroni", "noodle"], fish: ["bass", "salmon", "cod", "tuna", "trout", "halibut", "snapper"], salad: ["caesar", "greek", "cobb"], sandwich: ["burger", "wrap", "panini", "club"] };
 const stem = w => w.length > 4 && w.endsWith("ies") ? w.slice(0, -3) + "y" : w.length > 4 && w.endsWith("es") ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w;
 function edits(a, b) {
   if (Math.abs(a.length - b.length) > 2) return 9;
@@ -171,6 +173,8 @@ export function analyzeChat({ messages, ownerBySender, guests, items, menuText =
       for (const toks of variants[k]) {
         const matched = new Set(), covered = new Set();
         toks.forEach((t, ti) => words.forEach((w, wi) => { if (wordsMatch(w, t)) { matched.add(wi); covered.add(ti); } }));
+        // two receipt words said as one ("seabass" for "sea bass")
+        toks.forEach((t, ti) => { if (ti + 1 < toks.length) words.forEach((w, wi) => { if (w.length >= 6 && wordsMatch(w, t + toks[ti + 1])) { matched.add(wi); covered.add(ti); covered.add(ti + 1); } }); });
         if (covered.size && (!best || covered.size / toks.length > best.ratio)) best = { ratio: covered.size / toks.length, matched, full: covered.size === toks.length };
       }
       if (best) hits.push({ item: it, ...best });
@@ -189,6 +193,8 @@ export function analyzeChat({ messages, ownerBySender, guests, items, menuText =
       groups.push(merged);
     }
     for (const g of groups) {
+      // "the pasta one": a kind word in the message that fits exactly one of the candidates settles it
+      if (g.hits.length > 1) { const kinds = words.filter(w => KINDS[stem(w)]); const fit = g.hits.filter(h => kinds.some(k => itemTokens(h.item.name).some(t => KINDS[stem(k)].includes(stem(t))))); if (fit.length === 1) g.hits = fit; }
       if (g.hits.length === 1) { resolved.push({ guestId, itemId: g.hits[0].item.id, msg }); hasMention(g.hits); }
       else { if (guestId) { ambiguous.push({ msg, guestId, text: m.text, itemIds: g.hits.map(h => h.item.id) }); spoke.add(guestId); } else for (const h of g.hits) claimed.add(h.item.id); }
     }
