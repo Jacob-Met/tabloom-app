@@ -18,19 +18,20 @@ const origin = `http://127.0.0.1:${port}`;
 const SB = "https://www.sandbox.paypal.com/checkoutnow?token=";
 const SAMPLE = {
   title: "Noor’s birthday dinner",
-  guests: "Noor\nIdris\nCamille\nTomas",
-  receipt: "Lamb tagine 26.00\nGrilled sea bass 29.00\nMezze platter 18.00\nSaffron rice 7.00\nMint tea pot 8.00\nBirthday cake 9.00\nTax 8.00\nTip 19.40\nTotal 124.40",
-  chat: [ // chat intake
+  guests: "Noor\nIdris\nCamille\nTomas\nPriya",
+  receipt: "Cedar & Olive Kitchen\nGrilled chicken plate 24.00\nChicken penne 19.00\nGrilled sea bass 29.00\nLamb tagine 26.00\nMezze platter 18.00\nMint tea pot 8.00\nTax 10.00\nTip 19.00\nTotal 153.00",
+  chat: [ // chat intake: someone says just "the chicken", typos, a dish nobody mentions, mostly one person per dish
     "[11/12/26, 9:41 PM] Idris: I paid the bill, tell me what you had and I'll send requests",
-    "[11/12/26, 9:42 PM] Camille: I had the lamb tagine and shared the mezze with Tomas",
-    "[11/12/26, 9:42 PM] Tomas: lamb tagine for me too, and the mezze platter with Camille",
-    "[11/12/26, 9:43 PM] Idris: I had the grilled sea bass and the lamb tagine",
+    "[11/12/26, 9:42 PM] Camille: chkn penne for me, and the mezze with Tomas",
+    "[11/12/26, 9:42 PM] Tomas: i had the chicken, and the mezze with Camille",
+    "[11/12/26, 9:43 PM] Idris: sea bas for me",
     "[11/12/26, 9:43 PM] Noor: <Media omitted>",
-    "[11/12/26, 9:44 PM] Camille: it's Noor's birthday, she pays nothing for her own food. Idris, Tomas and I split the birthday cake",
-    "[11/12/26, 9:45 PM] Tomas: Everyone had the saffron rice and the mint tea pot",
-    "[11/12/26, 9:45 PM] Noor: thank you all!!"
+    "[11/12/26, 9:44 PM] Noor: lamb tagene pls",
+    "[11/12/26, 9:45 PM] Camille: it's Noor's birthday, thank you all!!"
   ].join("\n"),
-  note: "It was Noor’s birthday so she pays nothing for her own food. Idris, Camille and Tomas split the lamb tagine and the birthday cake. Only Idris had the grilled sea bass. Camille and Tomas shared the mezze platter. Everyone had the saffron rice and the mint tea pot."
+  restaurant: "Cedar & Olive Kitchen",
+  menu: "Pollo alla griglia - grilled chicken plate\nPenne al pollo - chicken penne\nBranzino - grilled sea bass\nTagine d'agneau - lamb tagine",
+  note: "It was Noor’s birthday. Idris had the grilled sea bass. Camille had the chicken penne and shared the mezze platter with Tomas. Tomas had the grilled chicken plate. Noor had the lamb tagine. Priya had the mint tea pot."
 };
 
 // voice intake: what the real listener returned for the bundled sample recording (tabloom/sample/table-talk.wav).
@@ -79,17 +80,31 @@ const WHO = [[/tagine|cake/i, ["Idris", "Camille", "Tomas"], "Idris, Camille and
   [/sea bass/i, ["Idris"], "Only Idris had the grilled sea bass."],
   [/mezze/i, ["Camille", "Tomas"], "Camille and Tomas shared the mezze platter."],
   [/rice|tea/i, ["Idris", "Camille", "Tomas"], "Everyone had the saffron rice and the mint tea pot; Noor pays nothing for her own food."]];
-const CHAT_WHO = [[/tagine/i, ["Idris", "Camille", "Tomas"], "Camille said: I had the lamb tagine; Tomas said: lamb tagine for me too; Idris said: I had the lamb tagine."], // chat intake
-  [/cake/i, ["Idris", "Camille", "Tomas"], "Camille said: Idris, Tomas and I split the birthday cake (it is Noor's birthday)."],
-  [/sea bass/i, ["Idris"], "Idris said: I had the grilled sea bass."],
-  [/mezze/i, ["Camille", "Tomas"], "Camille said: shared the mezze with Tomas; Tomas said: the mezze platter with Camille."],
-  [/rice|tea/i, ["Idris", "Camille", "Tomas"], "Tomas said: Everyone had the saffron rice and the mint tea pot; Camille said Noor pays nothing for her own food."]];
+const CHAT_WHO = [[/chicken penne/i, ["Camille"], "Camille said: chkn penne for me."], // chat intake
+  [/chicken plate/i, ["Tomas"], "Tomas said: i had the chicken (the payer chose the grilled chicken plate)."],
+  [/sea bass/i, ["Idris"], "Idris said: sea bas for me."],
+  [/mezze/i, ["Camille", "Tomas"], "Camille said: the mezze with Tomas; Tomas said: the mezze with Camille."],
+  [/tagine/i, ["Noor"], "Noor said: lamb tagene pls."]];
+// The payer's "Clarified by the payer" lines win over the sentence rules, like a careful reader would.
+const clarified = (tableNote, itemName) => {
+  const lower = itemName.toLowerCase(), guests = [];
+  for (const line of String(tableNote || "").split("\n").filter(l => l.startsWith("Clarified by the payer:"))) {
+    if (!line.toLowerCase().includes(lower)) continue;
+    const had = /^Clarified by the payer: (\w+) had /.exec(line), owned = /was (\w+)’s\.$/.exec(line);
+    if (had) guests.push(had[1]); else if (owned) guests.push(owned[1]);
+  }
+  return guests;
+};
 const model = async body => {
   await wait(1200);
   const { guests, items, tableNote } = JSON.parse(body.messages.at(-1).content);
   const rules = /\bsaid: /.test(tableNote || "") ? CHAT_WHO : WHO; // chat intake
   const assignments = items.map(item => {
+    const said = rules === CHAT_WHO ? clarified(tableNote, item.name) : [];
+    if (said.length) return { itemId: item.id, guestIds: said.map(n => guests.find(g => g.name === n)?.id).filter(Boolean), reason: "The payer said: " + said.join(" and ") + (said.length === 1 ? " had it." : " had it.") };
     const rule = rules.find(([re]) => re.test(item.name));
+    // the payer left the chicken cards open: a careful reader does not guess between two chicken dishes
+    if (rule && rules === CHAT_WHO && /chicken plate/i.test(item.name) && !/Clarified by the payer: Tomas/.test(tableNote || "")) return { itemId: item.id, guestIds: [], reason: "Tomas said “the chicken”, which could be either chicken dish." };
     return { itemId: item.id, guestIds: rule ? rule[1].map(n => guests.find(g => g.name === n)?.id).filter(Boolean) : [], reason: rule ? rule[2] : "The note does not say who had this item." };
   });
   return json({ model: "simulated", created_at: new Date().toISOString(), message: { role: "assistant", content: JSON.stringify({ assignments }) }, done: true, done_reason: "stop" });
@@ -112,7 +127,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const badgeJs = `(function(){
   var SB=${JSON.stringify(SB)},S=${JSON.stringify(SAMPLE)};
   var b=document.createElement("div");b.className="sim-badge";b.setAttribute("role","note");b.textContent="Simulated demo: no real PayPal call";document.body.prepend(b);
-  var sample={"new-table-title":S.title,"new-table-guests":S.guests,"receipt-text":S.receipt,"bill-note":S.note,"chat-text":S.chat};
+  var sample={"new-table-title":S.title,"new-table-guests":S.guests,"receipt-text":S.receipt,"bill-note":S.note,"chat-text":S.chat,"chat-restaurant":S.restaurant,"chat-menu":S.menu};
   var typed={};
   document.addEventListener("input",function(ev){if(ev.isTrusted&&ev.target.id)typed[ev.target.id]=true;},true);
   function fix(){

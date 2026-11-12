@@ -40,3 +40,23 @@
   .suggestion .review-confirm{min-height:48px;display:flex;align-items:center;gap:10px;font-size:15px}
   #apply-ai{width:100%;justify-content:center;min-height:52px}
 }
+
+/* Clear this up, restaurant and menu */
+.chat-where{margin:4px 0 12px}
+.chat-where .note-field{margin:6px 0 4px}
+.chat-where input{width:100%;min-height:48px;font-size:16px;padding:10px 12px;border:1px solid #98a4a7;border-radius:2px;background:var(--white);color:var(--ink)}
+.chat-menu{margin:6px 0 0}.chat-menu>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px;font-weight:700;color:var(--blue)}
+.chat-menu textarea{min-height:96px}
+.chat-clarify{margin:6px 0 14px}
+.chat-clarify h3{margin:0 0 2px}
+.clarify-card{margin:0 0 10px;padding:12px 14px 14px;background:var(--white);border:1px solid #f0d6c9;border-left:4px solid var(--coral);border-radius:4px}
+.clarify-card.answered{border-left-color:#2f7d4f;background:#f6fbf7}
+.clarify-card.silent{border-left-color:#98a4a7;background:#f7f8f8}
+.clarify-card .clarify-title{margin:0 0 10px;font-size:16px;line-height:1.4;font-weight:700;overflow-wrap:anywhere}
+.clarify-card.silent .clarify-title{margin-bottom:2px}.clarify-card.silent .chat-hint{margin:0}
+.clarify-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chat-card .clarify-chip{min-height:44px;padding:8px 16px;font-size:15px;font-weight:700;line-height:1.2;background:var(--white);color:var(--ink);border:1.5px solid #98a4a7;border-radius:22px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-align:center}
+.chat-card .clarify-chip[aria-pressed="true"]{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.chat-card .clarify-chip:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+@media(max-width:650px){.clarify-card{padding:12px}.chat-card .clarify-chip{flex:1 1 auto;min-height:44px}}
+.clarify-drink{margin:0 0 12px}.clarify-drink-name{margin:0 0 6px;font-size:14px;font-weight:700;color:var(--muted)}

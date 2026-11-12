@@ -68,6 +68,16 @@
       <details class="chat-card" id="chat-intake"><summary>Paste the group chat</summary>
         <p class="chat-hint">Everyone typed what they had? Paste the chat here. WhatsApp exports, iMessage and Android copies all work.</p>
         <label class="note-field">THE GROUP CHAT<textarea id="chat-text" rows="6" placeholder="Camille: I had the sea bass&#10;Tomas: lamb for me, and the mezze with Camille"></textarea></label>
+        <div class="chat-where">
+          <label class="note-field" for="chat-restaurant">WHERE DID YOU EAT?</label>
+          <input id="chat-restaurant" type="text" maxlength="60" autocomplete="off" placeholder="Restaurant name">
+          <p class="chat-hint" id="chat-restaurant-hint">Filled in from the receipt when it has a name line. Change it if it is wrong.</p>
+          <details class="chat-menu"><summary>Paste the menu (optional)</summary>
+            <p class="chat-hint">Paste the menu or its link text. Tabloom does not look anything up. It only uses the dish names you paste to understand things like “the pollo”.</p>
+            <label class="sr-only" for="chat-menu">Menu text</label>
+            <textarea id="chat-menu" rows="4" maxlength="6000" placeholder="Pollo alla griglia - grilled chicken plate&#10;Penne al pollo - chicken penne"></textarea>
+          </details>
+        </div>
         <button type="button" id="chat-read" class="outline">READ THE CHAT <span>↗</span></button>
         <p id="chat-status" class="chat-hint" role="status" aria-live="polite"></p>
         <div id="chat-result" class="chat-result" hidden></div>

@@ -108,3 +108,117 @@ export function buildGroupMessage({ title, rows, receiptCents }) {
 export function buildGuestMessage({ title, row }) {
   return row.cents === 0 ? row.name + ", you owe nothing for " + (title || "dinner") + "." : row.name + ", your share of " + (title || "dinner") + " is " + money(row.cents) + (row.url ? ". Pay here: " + row.url : ".");
 }
+
+// ---- "Clear this up": compare what people said with the receipt items (no model involved) ----
+const EMOJI_WORDS = { "🍗": "chicken", "🍝": "pasta", "🐟": "fish", "🍵": "tea", "🫖": "tea", "🍰": "cake", "🎂": "cake", "🍺": "beer", "🍕": "pizza", "🥗": "salad", "🍔": "burger", "🍷": "wine", "🥩": "steak" };
+const STOP = new Set(("the and for with from just also too only some pls please thanks thank all everyone everybody each both shared share sharing split splitting half third bit more another same that this these those which what who whom tell paid pay bill nothing nope yes yeah yep okay lol haha had have has got get ordered order orders took take having did does dont didnt ill its not but you your yours mine his her their was were are been will would can could should one two three any anyone dinner lunch food drink drinks birthday tonight").split(" "));
+const FILLER = new Set(["plate", "platter", "pot", "bowl", "side", "special", "large", "small", "glass", "dish", "order", "and", "the", "with", "alla", "al", "di", "del", "della", "con"]);
+const stem = w => w.length > 4 && w.endsWith("ies") ? w.slice(0, -3) + "y" : w.length > 4 && w.endsWith("es") ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w;
+function edits(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 9;
+  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) { let prev = row[0]; row[0] = i; for (let j = 1; j <= b.length; j++) { const tmp = row[j]; row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = tmp; } }
+  return row[b.length];
+}
+function subsequence(a, b) { let k = 0; for (const c of b) if (c === a[k]) k++; return k === a.length; }
+/** Does a word from a message mean the same word on the receipt? Plurals, one-letter typos and short forms ("chkn", "bas") count. */
+export function wordsMatch(w, t) {
+  if (w === t) return true;
+  const sw = stem(w), st = stem(t);
+  if (sw === st) return true;
+  if (w.length >= 5 && t.length >= 5 && edits(w, t) <= (Math.min(w.length, t.length) >= 8 ? 2 : 1)) return true;
+  if (sw.length >= 5 && st.length >= 5 && edits(sw, st) <= 1) return true;
+  if (w.length >= 3 && w.length <= 5 && t.length > w.length && t.length <= w.length * 2 + 2 && w[0] === t[0] && subsequence(w, t)) return true;
+  return false;
+}
+function tokens(text, extraStop) {
+  let s = String(text).normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase();
+  s = s.replace(/\p{Extended_Pictographic}/gu, ch => EMOJI_WORDS[ch] ? " " + EMOJI_WORDS[ch] + " " : " ").replace(/['’]s\b/g, "").replace(/['’]/g, "");
+  return s.replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(w => w.length >= 3 && !/^\d+$/.test(w) && !STOP.has(w) && !(extraStop && extraStop.has(w)));
+}
+const itemTokens = name => { const all = tokens(name); const t = all.filter(w => !FILLER.has(w)); return t.length ? t : all; };
+
+/** Menu lines like "Pollo alla griglia - grilled chicken plate": the part that names a receipt item makes the other parts aliases for it. */
+export function menuAliases(menuText, items) {
+  const out = {};
+  for (const line of String(menuText || "").split(/\r?\n/)) {
+    const segs = line.split(/\s[-–—]\s|[|:()\t]|\s{2,}|\s\$?\d+[.,]\d{2}\b.*$/).map(s => s.trim()).filter(s => s.replace(/[^\p{L}]/gu, "").length >= 3);
+    if (segs.length < 2) continue;
+    const covered = segs.map(seg => { const w = tokens(seg); return items.filter(it => { const t = itemTokens(it.name); return t.length && t.every(x => w.some(y => wordsMatch(y, x))); }); });
+    const hit = covered.findIndex(c => c.length === 1);
+    if (hit < 0) continue;
+    const item = covered[hit][0];
+    segs.forEach((seg, i) => { if (i === hit) return; const t = tokens(seg).filter(w => !FILLER.has(w)); if (t.length) (out[item.id] ||= []).push(t); });
+  }
+  return out;
+}
+
+/**
+ * Compare each assigned sender's messages with the receipt items.
+ * messages: [{sender,text}]; ownerBySender: normalized sender -> guest id; guests: [{id,name}]; items: [{id,name}].
+ * Returns { resolved: [{guestId,itemId,msg}], ambiguous: [{msg,guestId,text,itemIds}], claimed: itemIds mentioned by anyone, silent: guest ids }.
+ */
+export function analyzeChat({ messages, ownerBySender, guests, items, menuText = "" }) {
+  const guestWords = new Set(guests.flatMap(g => tokens(g.name)));
+  const aliases = menuAliases(menuText, items);
+  const variants = items.map(it => [itemTokens(it.name), ...(aliases[it.id] || [])]);
+  const resolved = [], ambiguous = [], claimed = new Set(), spoke = new Set();
+  messages.forEach((m, msg) => {
+    const words = tokens(m.text, guestWords), guestId = ownerBySender[norm(m.sender)] || "";
+    const hits = [];
+    items.forEach((it, k) => {
+      let best = null;
+      for (const toks of variants[k]) {
+        const matched = new Set(), covered = new Set();
+        toks.forEach((t, ti) => words.forEach((w, wi) => { if (wordsMatch(w, t)) { matched.add(wi); covered.add(ti); } }));
+        if (covered.size && (!best || covered.size / toks.length > best.ratio)) best = { ratio: covered.size / toks.length, matched, full: covered.size === toks.length };
+      }
+      if (best) hits.push({ item: it, ...best });
+    });
+    const exact = hits.filter(h => h.full), exactWords = new Set(exact.flatMap(h => [...h.matched]));
+    const partial = hits.filter(h => !h.full && [...h.matched].some(w => !exactWords.has(w)));
+    const hasMention = list => { for (const h of list) claimed.add(h.item.id); if (list.length && guestId) spoke.add(guestId); };
+    for (const h of exact) { resolved.push({ guestId, itemId: h.item.id, msg }); }
+    hasMention(exact);
+    // group partial matches that share a message word: more than one item in a group means the message is ambiguous
+    const groups = [];
+    for (const h of partial) {
+      const touching = groups.filter(g => [...h.matched].some(w => g.words.has(w)));
+      const merged = { words: new Set(h.matched), hits: [h] };
+      for (const g of touching) { g.words.forEach(w => merged.words.add(w)); merged.hits.push(...g.hits); groups.splice(groups.indexOf(g), 1); }
+      groups.push(merged);
+    }
+    for (const g of groups) {
+      if (g.hits.length === 1) { resolved.push({ guestId, itemId: g.hits[0].item.id, msg }); hasMention(g.hits); }
+      else { if (guestId) { ambiguous.push({ msg, guestId, text: m.text, itemIds: g.hits.map(h => h.item.id) }); spoke.add(guestId); } else for (const h of g.hits) claimed.add(h.item.id); }
+    }
+  });
+  const silent = guests.filter(g => !spoke.has(g.id)).map(g => g.id);
+  return { resolved, ambiguous, claimed: [...claimed], silent };
+}
+
+/** The attributed note plus the payer's answers and (lower priority) a short menu block, kept within the limit. */
+export function buildFullNote({ messages, nameBySender, clarifications = [], restaurant = "", menuText = "", limit = 2000 }) {
+  const clar = clarifications.join("\n");
+  const chat = buildChatNote(messages, nameBySender, Math.max(200, limit - clar.length - 1));
+  let note = [chat.note, clar].filter(Boolean).join("\n");
+  let menuUsed = false;
+  const menu = String(menuText || "").split(/\r?\n/).map(l => l.replace(/\s+/g, " ").trim()).filter(Boolean).join("; ");
+  const room = limit - note.length - 1;
+  if (menu && room > 80) {
+    const head = "Menu context" + (restaurant ? " (" + restaurant.trim().slice(0, 60) + ")" : "") + ": ";
+    const body = menu.length > room - head.length ? menu.slice(0, room - head.length - 1) + "…" : menu;
+    note += "\n" + head + body; menuUsed = true;
+  }
+  return { note, used: chat.used, dropped: chat.dropped, menuUsed };
+}
+
+/** A plausible restaurant name from pasted receipt text: the first line that is not an item, total or date. */
+export function guessRestaurant(receiptText, title = "") {
+  for (const raw of String(receiptText || "").split(/\r?\n/).slice(0, 6)) {
+    const line = raw.trim();
+    if (!line || /\d+[.,]\d{2}\s*$/.test(line) || /\b(total|subtotal|tax|tip|gratuity|server|table|guest|check|order|date|receipt|visa|card)\b/i.test(line) || /^[\d\s\-\/:.,#]+$/.test(line)) continue;
+    if (line.length >= 3 && line.length <= 60 && /\p{L}{3}/u.test(line)) return line;
+  }
+  return "";
+}
