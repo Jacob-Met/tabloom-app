@@ -63,7 +63,7 @@ function init() {
       if (!det) { det = document.createElement("details"); det.id = "edit-list"; det.innerHTML = "<summary>Edit as a list</summary>"; sug.before(det); det.append(sug); }
       det.before(view);
       view.querySelector(".scene-items").addEventListener("click", onItem);
-      $("table-view-apply").addEventListener("click", () => { sets().forEach(f => { const c = f.querySelector("[data-review-confirm]"); if (c && picked(f).length && !c.checked) { c.disabled = false; c.checked = true; c.dispatchEvent(new Event("change", { bubbles: true })); } }); $("apply-ai")?.click(); });
+      $("table-view-apply").addEventListener("click", () => { sets().forEach(f => { const c = f.querySelector("[data-review-confirm]"); if (c && picked(f).length && !c.checked) { c.disabled = false; c.checked = true; c.dispatchEvent(new Event("change", { bubbles: true })); } }); $("apply-ai")?.click(); setTimeout(() => { const sr = $("save-reviewed"); if (sr && !sr.disabled) sr.click(); }, 400); });
     }
     $("edit-list").open = false;
     paintPic(); paintItems();
