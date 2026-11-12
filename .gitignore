@@ -1,0 +1,5 @@
+node_modules/
+dist/
+tabloom/receipt-ocr/
+.env
+*.log

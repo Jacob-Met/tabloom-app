@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light"><title>Tabloom — split this receipt</title>
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./receipt-intake.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="wordmark"><span class="spark" aria-hidden="true">✳</span> TABLOOM <span class="wordsub">/ RECEIPT SPLITTER</span></div>
+  <div class="edition">USD <span>Sandbox</span></div>
+</header>
+<main class="shell">
+  <p id="example-receipt" class="example-receipt" hidden>Example receipt</p>
+  <nav class="table-bar" aria-label="Saved tables">
+    <button id="table-toggle" type="button" aria-expanded="false" aria-controls="table-drawer"><span class="table-caption">TABLE</span><strong id="table-current">Your tables</strong><span aria-hidden="true">⌄</span></button>
+    <button id="new-table" type="button" class="text-button">+ NEW TABLE</button>
+  </nav>
+  <section id="table-drawer" class="table-drawer" hidden aria-label="Choose a saved table">
+    <div class="table-drawer-heading"><strong id="table-count" role="status" aria-live="polite">Loading tables…</strong></div>
+    <label class="table-search-label" for="table-search">FIND A TABLE</label>
+    <div class="table-search-row"><input id="table-search" type="text" role="searchbox" maxlength="100" autocomplete="off" placeholder="Table name or guest"><button id="clear-table-search" type="button" class="text-button" hidden>Clear</button></div>
+    <ul id="table-list" class="table-list"></ul>
+  </section>
+  <dialog id="new-table-dialog" class="new-table-dialog">
+    <form id="new-table-form">
+      <div class="dialog-heading"><h2>Start another table</h2><button id="cancel-new-table" class="text-button" type="button">CANCEL</button></div>
+      <p>Your previous dinners and their payment history stay saved.</p>
+      <label>TABLE NAME<input id="new-table-title" required maxlength="100" autocomplete="off" placeholder="Sunday lunch"></label>
+      <label>GUESTS · ONE NAME PER LINE<textarea id="new-table-guests" required rows="4" placeholder="Alex&#10;Sam"></textarea></label>
+      <p class="field-hint">2–12 guests. Start with an empty receipt and enter what you actually ordered.</p>
+      <p id="new-table-error" role="status" aria-live="polite"></p>
+      <button id="create-table" type="submit" class="primary">CREATE TABLE →</button>
+    </form>
+  </dialog>
+  <div id="message" class="message" role="status" aria-live="polite">Opening this table…</div>
+  <section id="draft-recovery" class="message" hidden aria-live="polite">
+    <p id="draft-recovery-text"></p>
+    <details id="draft-comparison" hidden></details>
+    <button id="draft-backup" type="button" class="text-button" hidden>DOWNLOAD UNSAVED DRAFT</button>
+    <button id="review-latest-guests" type="button" class="outline" hidden>DISCARD DRAFT &amp; REVIEW LATEST REPLIES</button>
+    <button id="discard-draft" type="button" class="text-button">DISCARD UNSAVED DRAFT</button>
+  </section>
+  <div class="workspace" id="receipt-workspace">
+    <section class="left">
+      <nav id="receipt-originals" class="receipt-originals" aria-label="Saved original receipt photos" hidden></nav>
+      <div class="receipt-work-title"><h1>Receipt</h1><span id="revision">—</span><a href="#guest-checkout">Guest shares <span aria-hidden="true">↓</span></a></div>
+      <details id="table-setup" class="table-setup" open><summary><span><strong>Table details</strong><small id="setup-summary">Name, guests, discount, tax &amp; tip</small></span><span class="setup-toggle" aria-hidden="true"></span></summary>
+      <div class="setup-fields">
+      <div class="field-grid">
+        <label>TABLE NAME <input id="bill-title" maxlength="100" autocomplete="off"></label>
+        <label class="discount-field">RECEIPT DISCOUNT <div class="money-input"><span>$</span><input id="discount" inputmode="decimal" aria-label="Receipt-wide discount in USD"></div><small>Proportional to item shares.</small></label>
+        <label>SALES TAX <div class="money-input"><span>$</span><input id="tax" inputmode="decimal" aria-label="Sales tax in USD"></div></label>
+        <label>TIP <div class="money-input"><span>$</span><input id="tip" inputmode="decimal" aria-label="Tip in USD"></div></label>
+      </div>
+      <div class="subheading"><h3>Guests</h3><button type="button" id="add-guest" class="text-button">+ ADD PERSON</button></div>
+      <div id="guests" class="guests"></div>
+      <div id="guest-removal-status" class="receipt-import-status" role="status" hidden></div>
+      </div></details>
+      <div class="subheading"><h3 id="item-count">Items</h3><div class="item-entry-actions"><button type="button" id="paste-receipt" class="text-button">IMPORT RECEIPT</button><button type="button" id="add-item" class="text-button">+ ADD ITEM</button></div></div>
+      <section id="item-finder" hidden><label class="table-search-label" for="item-search">FIND A DISH</label><div class="table-search-row"><input id="item-search" type="search" maxlength="100" autocomplete="off" placeholder="Dish name"><button id="clear-item-search" type="button" class="text-button" hidden>Clear</button></div><p id="item-search-status" role="status" hidden></p></section>
+      <div id="receipt-import-status" class="receipt-import-status" role="status" hidden></div>
+      <div id="items" class="items"></div>
+      <details class="assistant-card"><summary>Split from a note</summary>
+        <label class="note-field">TABLE NOTE<textarea id="bill-note" rows="3" maxlength="2000" placeholder="Use receipt names: Only Mira ate the udon. Everyone except Mira shared the dumplings."></textarea></label>
+        <button type="button" id="suggest" class="outline">SUGGEST SPLITS <span>↗</span></button>
+        <div id="suggestions" class="suggestions"></div>
+      </details>
+      <div class="actions"><div class="commit-total"><span id="draft-total-label">Saved total</span><strong id="draft-total">—</strong></div>
+        <button type="button" id="save" class="primary">SAVE RECEIPT <span>↗</span></button>
+        <span id="save-state" class="save-state">No edits yet</span>
+      </div>
+    </section>
+    <aside class="right">
+      <div class="receipt">
+        <div class="receipt-top"><span id="money-label">SAVED SHARES</span><span>USD</span></div>
+        <h2 class="receipt-heading">Each guest owes</h2>
+        <p class="saved-caption" id="money-state"></p>
+        <div class="line-items" id="dues"></div>
+        <div id="grand-total" class="grand-total"></div>
+        <details class="receipt-breakdown"><summary>Bill breakdown</summary><div id="subtotal" class="totals"></div></details>
+
+      </div>
+    </aside>
+  </div>
+  <section class="payments-section" id="guest-checkout" hidden><a class="back-receipt" href="#receipt">← Receipt</a>
+    <div class="section-title"><h2>Guest shares</h2><span class="line"></span></div><p id="shares-state"></p>
+    <button type="button" id="incoming-guest-replies" class="outline incoming-guest-replies" aria-controls="guest-links-desk" aria-live="polite" hidden></button>
+    <button type="button" id="invite-table" class="outline">INVITE TABLE · ONE QR</button><section id="table-invitation" class="guest-links-desk" hidden aria-label="Shared table invitation"></section>
+    <div id="payments" class="payments"></div>
+    <details class="guest-response-desk" id="invitation-settings"><summary>Invitation settings</summary><section class="guest-network" id="guest-network" aria-label="Guest invitations"></section><button type="button" class="outline" id="invite-review-file" hidden>Download review form</button></details>
+    <section class="guest-links-desk" id="guest-links-desk" hidden><h3>Guest responses</h3><p>Links expire after two hours. Share each link only with its named guest.</p><button id="refresh-guest-links" class="text-button" type="button">REFRESH RESPONSES</button><div id="guest-batch-controls" class="guest-batch-controls" hidden><button id="review-guest-responses" class="outline" type="button" aria-describedby="guest-batch-count">REVIEW SELECTED RESPONSES</button><p id="guest-batch-count" aria-live="polite"></p></div><p id="guest-refresh-error" role="status" hidden></p><div id="guest-links-list"></div></section>
+    <details class="guest-response-desk" id="guest-response-desk"><summary>Import guest responses</summary><label>GUEST RESPONSE FILES <input id="guest-response-file" type="file" accept=".json,application/json" multiple></label><div id="file-response-recovery" hidden></div></details><div id="guest-response-preview" role="status" aria-live="polite" tabindex="-1"></div>
+    <details class="guest-response-desk" id="sandbox-connection">
+      <summary>Sandbox connection <span id="sandbox-tag"></span></summary>
+
+      <button id="check-sandbox" type="button" class="outline">CHECK CONNECTION</button>
+      <p id="sandbox-connection-result" role="status" aria-live="polite">No connection check has run in this session.</p>
+      <p>Server setup: <code>TABLOOM_PAYPAL_CLIENT_ID</code> and <code>TABLOOM_PAYPAL_CLIENT_SECRET</code> must belong to the same Sandbox app. Restart Tabloom after changing them.</p>
+    </details>
+  </section>
+
+</main>
+<script src="./main.js" type="module"></script>
+</body></html>
