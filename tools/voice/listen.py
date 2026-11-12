@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tabloom listener: audio in, [{speaker, start, end, text}] out. Local only, no network at request time.
+"""Tabloom listener: audio or video in, [{speaker, start, end, text}] plus sentence lines [{start, end, text}] out (ffmpeg takes the audio track of video files). Local only, no network at request time.
 
   POST /listen   raw audio bytes (wav/webm/m4a/mp3...)  ->  {"speakers": n, "duration": s, "segments": [...]}
   GET  /health   ->  {"ok": true}
@@ -60,6 +60,23 @@ def chunks(words):
     return out
 
 
+def sentence_lines(words):
+    """Sentence-level lines with timestamps, split at sentence-ending punctuation from the transcriber's own words."""
+    out, cur = [], []
+    for w in words:
+        cur.append(w)
+        if w.word.strip()[-1:] in ".?!":
+            out.append(cur); cur = []
+    if cur:
+        out.append(cur)
+    res = []
+    for c in out:
+        text = "".join(w.word for w in c).strip()
+        if text:
+            res.append({"start": round(c[0].start, 2), "end": round(c[-1].end, 2), "text": text})
+    return res
+
+
 def listen(raw, names=()):
     import numpy as np
     from resemblyzer import preprocess_wav
@@ -109,7 +126,7 @@ def listen(raw, names=()):
             merged[-1]["end"] = i["end"]; merged[-1]["text"] += " " + i["text"]
         else:
             merged.append({"speaker": i["speaker"], "start": i["start"], "end": i["end"], "text": i["text"]})
-    return {"speakers": len(order), "duration": round(len(full) / sr, 2), "segments": merged}
+    return {"speakers": len(order), "duration": round(len(full) / sr, 2), "segments": merged, "lines": sentence_lines(words)}
 
 
 class H(BaseHTTPRequestHandler):

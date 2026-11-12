@@ -488,7 +488,7 @@ export async function handleTabloom(req:IncomingMessage,res:ServerResponse,servi
       const asset=pathname==="/tabloom"||pathname==="/tabloom/"?"index.html":pathname.slice("/tabloom/".length);
       if(!Object.hasOwn(mime,asset))fail("Asset not found",404);
       const body=await fs.readFile(join(here,"..","tabloom",asset));
-      res.writeHead(200,{"content-type":mime[asset],"cache-control":"no-store","x-content-type-options":"nosniff","content-security-policy":"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data: blob:; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"});
+      res.writeHead(200,{"content-type":mime[asset],"cache-control":"no-store","x-content-type-options":"nosniff","content-security-policy":"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"});
       res.end(body);return true;
     }
     if(req.method==="GET"&&pathname==="/tabloom/api/tables"){reply(res,200,await collection.tableList());return true;}

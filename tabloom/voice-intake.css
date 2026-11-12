@@ -34,3 +34,18 @@
 .voice-speaker[data-c="3"]{--spk:#b07a12}
 .voice-speaker[data-c="4"]{--spk:#7a3f8f}
 .voice-speaker[data-c="5"]{--spk:#1e8a8a}
+
+/* "who said this?" line-by-line fallback */
+.voice-lines-head{font-size:13px;color:var(--muted);margin:0 0 10px}
+.voice-line{display:flex;gap:12px;align-items:flex-start;min-height:44px;border:1px solid var(--line);background:var(--white);border-radius:12px;padding:10px;margin:0 0 10px}
+.voice-line-frame{flex:none;width:96px;min-height:44px;aspect-ratio:4/3;object-fit:cover;border-radius:8px;background:var(--line)}
+.voice-line-frame.failed{visibility:hidden;width:0;margin-right:-12px}
+.voice-line-play{flex:none;min-height:44px;border-radius:8px}
+.voice-line-body{flex:1;min-width:0}
+.voice-line-text{margin:0 0 8px;font-size:14px;line-height:1.45;color:var(--ink)}
+.voice-chips{display:flex;flex-wrap:wrap;gap:6px}
+.voice-chip{min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:22px;background:transparent;color:var(--ink);font:700 13px/1 Arial,Helvetica,sans-serif;cursor:pointer}
+.voice-chip.skip{color:var(--muted);font-weight:400}
+.voice-chip[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:var(--white)}
+.voice-chip.skip[aria-pressed=true]{background:var(--muted);border-color:var(--muted)}
+@media(max-width:520px){.voice-line{flex-direction:column}.voice-line-frame{width:100%;max-width:240px}}

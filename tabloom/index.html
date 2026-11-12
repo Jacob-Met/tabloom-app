@@ -89,11 +89,12 @@
         <div id="voice-unavailable" class="voice-note" role="status" hidden></div>
         <div class="voice-actions">
           <button type="button" id="voice-record" class="outline">● RECORD THE TABLE</button>
-          <label class="voice-upload">UPLOAD A RECORDING<input id="voice-file" type="file" accept="audio/*,video/webm,.m4a,.wav,.mp3,.webm,.ogg" aria-label="Upload a recording"></label>
+          <label class="voice-upload">UPLOAD A RECORDING OR A VIDEO OF THE TABLE<input id="voice-file" type="file" accept="audio/*,video/*,.m4a,.wav,.mp3,.webm,.ogg,.mp4,.mov,.m4v" aria-label="Upload a recording or a video of the table"></label>
         </div>
         <p id="voice-sample-row" hidden>No recording handy? <button type="button" id="voice-sample">Try the sample dinner</button></p>
         <p id="voice-status" role="status" aria-live="polite"></p>
         <div id="voice-speakers"></div>
+        <div id="voice-lines"></div>
         <button type="button" id="voice-suggest" class="outline" hidden>SUGGEST SPLITS FROM THE RECORDING <span>↗</span></button>
       </details>
       <details class="assistant-card"><summary>Split from a note</summary>
