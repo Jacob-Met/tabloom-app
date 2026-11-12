@@ -2,6 +2,23 @@
 
 Split a shared bill by who actually had what, to the exact cent, then give each guest their own PayPal checkout.
 
+## Try the simulated demo
+
+```sh
+npm install && npm run build   # once
+npm run demo                   # or: node demo.mjs
+```
+
+Open <http://127.0.0.1:3000/tabloom/> (set `TABLOOM_PORT` to use another port). No PayPal keys, no local model and no network are needed; a "Simulated demo: no real PayPal call" badge stays in the corner.
+
+1. Choose **New table** and **Create table**: the name and the four guests are already filled in.
+2. Choose **Paste receipt text** (the example receipt is filled in), **Preview**, then **Use receipt**.
+3. Open **Split from a note** (the example note is filled in) and choose **Suggest**: after a short pause each item gets a proposed set of guests. Check each item, confirm it, then apply and save.
+4. Under **Guest shares**, press **Request payment** for Camille, follow **Open PayPal Sandbox** to the "Simulated PayPal approval" page and press **Approve**.
+5. Back at the table, press **Complete approved payment**. Camille's $32.92 share is marked **Paid**.
+
+What is simulated: the PayPal Sandbox calls (token, create order, get order, capture) are answered in-process by a small fake, and the AI answer is a fixed split for the example note. The real PayPal Sandbox and local-model setup is described below.
+
 Tabloom is a local app for the person holding the receipt. Paste the receipt, describe the evening in a sentence or two, check the proposed split, and send each guest a payment request for their exact share.
 
 ## Who it is for

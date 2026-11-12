@@ -12,6 +12,7 @@
     "prebuild": "node tools/prepare-receipt-ocr.mjs",
     "build": "tsc --noEmitOnError && node tools/copy-tabloom-assets.mjs",
     "start": "node dist/src/index.js",
+    "demo": "node demo.mjs",
     "test": "npm run build && node --test dist/test/*.test.js test/*.test.mjs",
     "typecheck": "tsc --noEmit"
   },
