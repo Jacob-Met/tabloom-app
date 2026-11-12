@@ -74,8 +74,8 @@ export const RECEIPT_VISION_CONFIG = {
   "min_p": 0,
   "presence_penalty": 1.5,
   "seed": 2601026,
-  "image_min_tokens": 1024,
-  "image_max_tokens": 1024,
+  "image_min_tokens": 512,
+  "image_max_tokens": 512,
   "status": "Frozen receipt proof: existing estate-pinned 4B weights plus same-revision F16 projector; actual compatibility, memory and accuracy remain to be received.",
   "speculative_type": "draft-mtp",
   "speculative_draft_max": 3
