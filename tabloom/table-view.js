@@ -21,7 +21,15 @@ function init() {
     await new Promise((res, rej) => { v.addEventListener("loadeddata", res, { once: true }); v.addEventListener("error", rej, { once: true }); });
     await new Promise(res => { v.addEventListener("seeked", res, { once: true }); v.currentTime = (v.duration || 0) * 0.4; });
     const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext("2d").drawImage(v, 0, 0);
-    dims = [c.width, c.height]; frameFor = tv.url; frameUrl = c.toDataURL("image/jpeg", 0.88); pos = []; holders = []; return frameUrl;
+    dims = [c.width, c.height]; frameFor = tv.url; frameUrl = c.toDataURL("image/jpeg", 0.88); pos = []; holders = [];
+    // Faces are found on this machine; when nothing is found the boxes start evenly spaced and can be dragged.
+    try {
+      const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.9));
+      const r = await fetch("/tabloom/api/faces", { method: "POST", body: blob, headers: { "content-type": "image/jpeg" } });
+      const found = ((await r.json()).faces || []).filter(f => f && f.w > 0.03);
+      if (found.length) pos = found.map(f => ({ x: Math.max(0, f.x - f.w * 0.08), y: Math.max(0, f.y - f.h * 0.18), w: Math.min(1, f.w * 1.16), h: Math.min(1, f.h * 1.3) }));
+    } catch {}
+    return frameUrl;
   }
 
   // Faces: no detector is available in this build, so boxes start evenly spaced across the upper part
@@ -49,7 +57,7 @@ function init() {
     if (!holders.length) initHolders(gs);
     if (!view) {
       view = document.createElement("section"); view.id = "table-view"; view.setAttribute("aria-label", "Who had what");
-      view.innerHTML = '<h3>Who had what</h3><p class="scene-hint">Drag each box onto the right head, tap it to switch who it is. Tap an item to change who pays; shift-click adds another person.</p><div class="scene-pic"></div><div class="scene-items"></div><div class="scene-apply-row"><button id="table-view-apply" type="button">Looks right</button></div>';
+      view.innerHTML = '<h3>Who had what</h3><p class="scene-hint">Tap an item to change who pays. Tap a face to switch who it is, or drag the box if it is off.</p><div class="scene-pic"></div><div class="scene-items"></div><div class="scene-apply-row"><button id="table-view-apply" type="button">Looks right</button></div>';
       let det = $("edit-list");
       if (!det) { det = document.createElement("details"); det.id = "edit-list"; det.innerHTML = "<summary>Edit as a list</summary>"; sug.before(det); det.append(sug); }
       det.before(view);

@@ -32,6 +32,22 @@ export async function handleVoice(req: IncomingMessage, res: ServerResponse, pat
     json(res, 200, { available: up, simulated: !!process.env.TABLOOM_VOICE_CANNED, install: "npm run listen:install && npm run listen" });
     return true;
   }
+  if (pathname === "/tabloom/api/faces" && req.method === "POST") {
+    // table view: where the faces are in one frame of the table video. A local script; the picture never leaves this machine.
+    const parts: Buffer[] = []; let size = 0;
+    for await (const c of req) { size += (c as Buffer).length; if (size > 6 * 1024 * 1024) { json(res, 413, { faces: [] }); return true; } parts.push(c as Buffer); }
+    const { spawn } = await import("node:child_process"); const { fileURLToPath } = await import("node:url");
+    const script = process.env.TABLOOM_FACES_SCRIPT ?? fileURLToPath(new URL("../../tools/voice/faces.py", import.meta.url));
+    const out = await new Promise<string>(resolve => {
+      let text = ""; const child = spawn(process.env.TABLOOM_FACES_PYTHON ?? "python3", [script], { stdio: ["pipe", "pipe", "ignore"] });
+      const timer = setTimeout(() => child.kill(), 15000);
+      child.stdout.on("data", d => { text += d; }); child.on("error", () => { clearTimeout(timer); resolve(""); }); child.on("close", () => { clearTimeout(timer); resolve(text); });
+      child.stdin.on("error", () => {}); child.stdin.end(Buffer.concat(parts));
+    });
+    let faces: unknown = []; try { faces = JSON.parse(out).faces ?? []; } catch { faces = []; }
+    json(res, 200, { faces });
+    return true;
+  }
   if (pathname !== "/tabloom/api/voice" || req.method !== "POST") return false;
   const origin = req.headers.origin;
   if (origin && origin !== "http://" + req.headers.host) { json(res, 403, { error: "Origin mismatch" }); return true; }
